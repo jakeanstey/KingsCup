@@ -20,7 +20,7 @@ const styles = StyleSheet.create({
     wrapper: {
         position: 'absolute',
         right: 0,
-        bottom: 100,
+        bottom: 40,
     },
     container: {        
         paddingLeft: 10,

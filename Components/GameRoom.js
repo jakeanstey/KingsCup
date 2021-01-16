@@ -44,7 +44,7 @@ export default function GameRoom() {
     const [pickCardVisible, setPickCardVisible] = useState(false);
     const [message, setMessage] = useState(null);
     const [card, setCard] = useState(null);
-    const [endTurnVisible, setEndTurnVisible] = useState(true);
+    const [endTurnVisible, setEndTurnVisible] = useState(false);
     const [drinkReason, setDrinkReason] = useState(null);
     const [neverHaveIEverVisible, setNeverHaveIEverVisible] = useState(false);
     const [neverHaveIEverLives, setNeverHaveIEverLives] = useState(null);
@@ -52,6 +52,7 @@ export default function GameRoom() {
     const [endGameVisible, setEndGameVisible] = useState(false);
     const [helpVisible, setHelpVisible] = useState();
     const [speakerphoneSource, setSpeakerphoneSource] = useState(speakerphoneOn);
+    const [videosHeight, setVideosHeight] = useState(0);
 
     // any reference from an event must use the ref value
     const streamsRef = useRef(streams);
@@ -126,7 +127,7 @@ export default function GameRoom() {
             setNeverHaveIEverLives(null);
             setStreams(streamsRef.current.map(stream =>
                 {
-                    stream.lives = 0;
+                    stream.lives = null;
                     return stream;
                 }))
             if(AppData.current.myTurn)
@@ -192,9 +193,11 @@ export default function GameRoom() {
 
     const gotDimensions = (e) =>
     {
-        const { x, y, width, height } = e.nativeEvent.layout;
+        const { width, height } = e.nativeEvent.layout;
+        const usableHeight = height - 40;
+        setVideosHeight(usableHeight);
         setVideoWidth(width / 2);
-        setVideoHeight((height - 40) / 3);
+        setVideoHeight((usableHeight) / 3);
     }
 
     const toggleMute = () =>
@@ -237,6 +240,12 @@ export default function GameRoom() {
     {
         AppData.current.endTurn();
         setEndTurnVisible(false);
+        setNeverHaveIEverLives(null);
+        setNeverHaveIEverVisible(false);
+        setStreams(streamsRef.current.filter(stream => {
+            stream.lives = null;
+            return stream;
+        }))
     }
 
     const neverHaveIEver = (iHave) =>
@@ -277,86 +286,91 @@ export default function GameRoom() {
     }
 
     return (
-        <>
-        <View style={styles.statusBar}>
-            { isHost && 
-            <Image source={crown} style={styles.crown} />
-            }
-            <View style={styles.roomCodeGroup}>
-                <Text style={styles.roomCode}>Code: {AppData.current.roomCode.toUpperCase()}</Text>
-                <TouchableOpacity onPress={copyRoomCode}>
-                    <Image source={copy} style={styles.copy} />
+        <View style={styles.wrapper} onLayout={gotDimensions}>
+            <View style={styles.statusBar}>
+                { isHost && 
+                <Image source={crown} style={styles.crown} />
+                }
+                <View style={styles.roomCodeGroup}>
+                    <Text style={styles.roomCode}>Code: {AppData.current.roomCode.toUpperCase()}</Text>
+                    <TouchableOpacity onPress={copyRoomCode}>
+                        <Image source={copy} style={styles.copy} />
+                    </TouchableOpacity>
+                </View>
+                { isHost &&
+                <TouchableOpacity onPress={playPause} activeOpacity={1}>
+                    <Image source={playPauseSource} style={styles.playPause} />
                 </TouchableOpacity>
-            </View>
-            { isHost &&
-            <TouchableOpacity onPress={playPause} activeOpacity={1}>
-                <Image source={playPauseSource} style={styles.playPause} />
-            </TouchableOpacity>
-            }
-            <TouchableOpacity onPress={toggleSpeakerphone} activeOpacity={1}>
-                <Image source={speakerphoneSource} style={styles.speakerphone} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={toggleMute} activeOpacity={1}>
-                <Image source={micIcon} style={styles.mic} />
-            </TouchableOpacity>
-            <OptionsMenu button={moreIcon} buttonStyle={{height: 32, width: undefined, aspectRatio: 121 / 431, marginLeft: 20, marginRight: 10}}
-                options={["Help", "Leave", "Cancel"]} 
-                actions={[helpClicked, leaveClicked, () => {}]}
-                destructiveIndex={1} />
-        </View>
-        <View style={styles.content} onLayout={gotDimensions}>
-            { stream && 
-            <>
-            <VideoFeed style={styles.video} stream={stream} username={AppData.current.username} width={videoWidth} height={videoHeight} peerID={AppData.current.peerID} onClick={playerClicked} neverHaveIEverLives={neverHaveIEverLives} />
-            </>
-            }
-            { streams.length > 0 && 
-            streams.map(stream =>
-                {
-                    return <VideoFeed style={styles.video} stream={stream.stream} username={stream.username} width={videoWidth} height={videoHeight} key={stream.peerID} peerID={stream.peerID} onClick={playerClicked} neverHaveIEverLives={stream.lives} />
-                })
-            }
-            { endTurnVisible &&
-            <EndTurnButton onClick={endTurn} />
-            }
-            { endGameVisible &&
-            <GameOverButton onClick={() => AppData.current.disconnectAndEndGame()} />
-            }
-            { neverHaveIEverVisible &&
-            <NeverHaveIEver callback={neverHaveIEver} />
-            }
-            { pickCardVisible &&
-            <PickCardView pickCard={pickCard} />
-            }
-            { rockPaperScissorsVisible &&
-            <RockPaperScissors style={styles.rockPaperScissors} rockPaperScissorsChosen={rockPaperScissorsChosen} />
-            }
-            { message !== null &&
-            <MessageView message={message} />
-            }
-            { drinkReason !== null &&
-            <DrinkView reason={drinkReason} />
-            }
-            { card !== null &&
-            <CardView card={card} />
-            }
-        </View>
-        { helpVisible &&
-        <View style={styles.helpWrapper}>
-            <View style={styles.helpHeader}>
-                <TouchableOpacity onPress={closeHelp} activeOpacity={1}>
-                    <Image source={backButton} />
+                }
+                <TouchableOpacity onPress={toggleSpeakerphone} activeOpacity={1}>
+                    <Image source={speakerphoneSource} style={styles.speakerphone} />
                 </TouchableOpacity>
-                <Text style={styles.navTitle}>How To Play</Text>
+                <TouchableOpacity onPress={toggleMute} activeOpacity={1}>
+                    <Image source={micIcon} style={styles.mic} />
+                </TouchableOpacity>
+                <OptionsMenu button={moreIcon} buttonStyle={{height: 28, width: undefined, aspectRatio: 121 / 431, marginLeft: 20, marginRight: 10}}
+                    options={["Help", "Leave", "Cancel"]} 
+                    actions={[helpClicked, leaveClicked, () => {}]}
+                    destructiveIndex={1} />
             </View>
-            <HowToPlay />
+            <View style={{...styles.content, height: videosHeight}}>
+                { stream && 
+                <>
+                <VideoFeed style={styles.video} stream={stream} username={AppData.current.username} width={videoWidth} height={videoHeight} peerID={AppData.current.peerID} onClick={playerClicked} neverHaveIEverLives={neverHaveIEverLives} />
+                </>
+                }
+                { streams.length > 0 && 
+                streams.map(stream =>
+                    {
+                        return <VideoFeed style={styles.video} stream={stream.stream} username={stream.username} width={videoWidth} height={videoHeight} key={stream.peerID} peerID={stream.peerID} onClick={playerClicked} neverHaveIEverLives={stream.lives} />
+                    })
+                }
+                { endTurnVisible &&
+                <EndTurnButton onClick={endTurn} />
+                }
+                { endGameVisible &&
+                <GameOverButton onClick={() => AppData.current.disconnectAndEndGame()} />
+                }
+                { neverHaveIEverVisible &&
+                <NeverHaveIEver callback={neverHaveIEver} />
+                }
+                { pickCardVisible &&
+                <PickCardView pickCard={pickCard} />
+                }
+                { rockPaperScissorsVisible &&
+                <RockPaperScissors style={styles.rockPaperScissors} rockPaperScissorsChosen={rockPaperScissorsChosen} />
+                }
+                { message !== null &&
+                <MessageView message={message} />
+                }
+                { drinkReason !== null &&
+                <DrinkView reason={drinkReason} />
+                }
+                { card !== null &&
+                <CardView card={card} />
+                }
+            </View>
+            { helpVisible &&
+            <View style={styles.helpWrapper}>
+                <View style={styles.helpHeader}>
+                    <TouchableOpacity onPress={closeHelp} activeOpacity={1}>
+                        <Image source={backButton} />
+                    </TouchableOpacity>
+                    <Text style={styles.navTitle}>How To Play</Text>
+                </View>
+                <HowToPlay />
+            </View>
+            }
         </View>
-        }
-        </>
     )
 }
 
 const styles = StyleSheet.create({
+    wrapper: {
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'white'
+    },
     statusBar: {
         height: 40,
         display: 'flex',
@@ -364,6 +378,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingLeft: 10,
         paddingRight: 10,
+        backgroundColor: '#EAF1F6'
     },  
     roomCode: {
         fontSize: 20,
@@ -380,7 +395,7 @@ const styles = StyleSheet.create({
         marginLeft: 10
     },
     mic: {
-        height: 32,
+        height: 28,
         width: undefined,
         aspectRatio: 286/447
     },
@@ -390,7 +405,6 @@ const styles = StyleSheet.create({
         display: 'flex',
         flexDirection: 'row',
         flexWrap: 'wrap',
-        backgroundColor: 'gray'
     },
     video: {
         
@@ -404,7 +418,7 @@ const styles = StyleSheet.create({
     playPause: {
         height: 28,
         width: undefined,
-        aspectRatio: 353/500,
+        aspectRatio: 300/500,
         marginRight: 10
     },
     rockPaperScissors: {
@@ -415,7 +429,7 @@ const styles = StyleSheet.create({
         left: 0,
         top: 40,
         right: 0,
-        bottom: 40,
+        bottom: 0,
         backgroundColor: 'white'
     },
     helpHeader: {

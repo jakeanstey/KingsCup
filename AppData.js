@@ -49,7 +49,14 @@ export default class AppData
         });
 
         console.log('Kings Cup: Connecting to socket server');
-        this.socket = IO(config.socketSettings.url, config.socketSettings.options);
+        if(__DEV__)
+        {
+            this.socket = IO(config.debugSocketSettings.url, config.debugSocketSettings.options);
+        }
+        else
+        {
+            this.socket = IO(config.socketSettings.url, config.socketSettings.options);
+        }        
 
         this.socket.on('connect', () => 
         {
