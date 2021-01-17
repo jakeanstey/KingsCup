@@ -20,6 +20,7 @@ import fanOfKings from '../Images/fan_of_kings.png';
 import backButton from '../Images/back_button.png';
 import AppData from '../AppData';
 import HowToPlay from './HowToPlay';
+import Disclaimer from '../Partials/Disclaimer';
 
 export default function MainMenu({ startGameCallback }) {
     const [currentSection, setCurrentSection] = useState('main');
@@ -30,6 +31,7 @@ export default function MainMenu({ startGameCallback }) {
     const [female, setFemale] = useState(true);
     const [roomCode, setRoomCode] = useState('');
     const [viewHeight, setViewHeight] = useState();
+    const [disclaimerVisible, setDisclaimerVisible] = useState(false);
 
     const bank = 'abcdefghijklmnopqrstuvwxyz1234567890';
 
@@ -91,10 +93,7 @@ export default function MainMenu({ startGameCallback }) {
             {
                 if(hostable)
                 {
-                    AppData.current.startCameraFeed(() =>
-                    {
-                        startGameCallback();
-                    });     
+                    setDisclaimerVisible(true);
                 }
                 else
                 {
@@ -123,10 +122,7 @@ export default function MainMenu({ startGameCallback }) {
             {
                 if(joinable)
                 {
-                    AppData.current.startCameraFeed(() =>
-                    {
-                        startGameCallback();
-                    });
+                    setDisclaimerVisible(true);
                 }
                 else
                 {
@@ -172,6 +168,14 @@ export default function MainMenu({ startGameCallback }) {
     {
         const { height } = e.nativeEvent.layout;
         //setViewHeight(height);
+    }
+
+    const agreedToDisclaimer = () =>
+    {
+        AppData.current.startCameraFeed(() =>
+        {
+            startGameCallback();
+        });     
     }
 
     return (
@@ -223,6 +227,9 @@ export default function MainMenu({ startGameCallback }) {
                 }
                 { currentSection !== 'howToPlay' &&
                 <Image style={styles.cards} source={fanOfKings} />
+                }
+                { disclaimerVisible &&
+                <Disclaimer confirm={agreedToDisclaimer} />
                 }
             </View>
         </ScrollView>
