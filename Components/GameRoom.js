@@ -32,6 +32,7 @@ import NeverHaveIEver from '../Partials/NeverHaveIEver';
 import RockPaperScissors from '../Partials/RockPaperScissors';
 import GameOverButton from '../Partials/GameOverButton';
 import HowToPlay from './HowToPlay';
+import PlayersList from '../Partials/PlayersList';
 
 export default function GameRoom() {
     const [stream, setStream] = useState();
@@ -53,6 +54,7 @@ export default function GameRoom() {
     const [helpVisible, setHelpVisible] = useState();
     const [speakerphoneSource, setSpeakerphoneSource] = useState(speakerphoneOn);
     const [videosHeight, setVideosHeight] = useState(0);
+    const [playersList, setPlayersList] = useState([]);
 
     // any reference from an event must use the ref value
     const streamsRef = useRef(streams);
@@ -285,11 +287,43 @@ export default function GameRoom() {
         setSpeakerphoneSource(state ? speakerphoneOn : speakerphoneOff);
     }
 
+    const kickPlayerClicked = () =>
+    {
+        AppData.current.socket.emit('get-current-players', (players) =>
+        {
+            players = JSON.parse(players);
+            players = players.filter(player => player.peerID !== AppData.current.peerID);
+            if(players.length === 0)
+            {
+                Toast.show("No players to kick", Toast.SHORT);
+            }
+            else
+            {
+                setPlayersList(players);
+            }            
+        });
+    }
+
+    const playerListItemClicked = (player) =>
+    {
+        // TODO: process selection type for scalability, if the need to re-use the control arises
+        AppData.current.socket.emit('kick-player', player.peerID);
+        cancelPlayerSelection();
+    }
+    
+    const cancelPlayerSelection = () =>
+    {
+        setPlayersList([]);
+    }
+
     return (
         <View style={styles.wrapper} onLayout={gotDimensions}>
             <View style={styles.statusBar}>
                 { isHost && 
-                <Image source={crown} style={styles.crown} />
+                <OptionsMenu button={crown} buttonStyle={styles.crown}
+                options={["Kick Player", "Cancel"]} 
+                actions={[kickPlayerClicked, () => {}]}
+                destructiveIndex={1} />
                 }
                 <View style={styles.roomCodeGroup}>
                     <Text style={styles.roomCode}>Code: {AppData.current.roomCode.toUpperCase()}</Text>
@@ -348,6 +382,9 @@ export default function GameRoom() {
                 }
                 { card !== null &&
                 <CardView card={card} />
+                }
+                { playersList.length > 0 &&
+                <PlayersList players={playersList} playerClicked={playerListItemClicked} cancel={cancelPlayerSelection} />
                 }
             </View>
             { helpVisible &&

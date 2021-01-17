@@ -74,6 +74,12 @@ export default class AppData
         {
             console.log("error", error);
         });
+
+        this.socket.on('kicked', () =>
+        { 
+            console.log('Kings Cup: kicked by host')
+            this.disconnectAndEndGame();
+        });
     }
 
     on(eventName, callback)
@@ -338,9 +344,8 @@ export default class AppData
 
             this.socket.on('disconnect', () =>
             {
-                this.peerServer.destroy();
-                this.leaveGameCallback();
-            })
+                this.disconnectAndEndGame();
+            });
         });
     }
 
@@ -352,11 +357,6 @@ export default class AppData
         this.peerServer.on('error', (error) =>
         {
             console.error('Kings Cup: Peer server error:', error);
-        });
-
-        this.peerServer.on('disconnected', () =>
-        {
-            this.disconnectAndEndGame();
         });
 
         this.peerServer.on('open', myID => {
