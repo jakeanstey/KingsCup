@@ -5,6 +5,8 @@ import {
     Text,
     Image,
     TouchableOpacity,
+    BackHandler,
+    Alert
 } from 'react-native';
 import Clipboard from '@react-native-community/clipboard';
 import OptionsMenu from 'react-native-options-menu';
@@ -64,9 +66,19 @@ export default function GameRoom() {
         _setStreams(streams);
     }
 
+    const handleBackButton = () =>
+    {
+        Alert.alert("Leaving game", "Are you sure you would like to leave the game?", [
+            { text: "Cancel", onPress: () => null },
+            { text: "Yes", onPress: leaveClicked } 
+        ])
+        return true;
+    }
+
     useEffect(() =>
     {
         setStream(AppData.current.videoStream);
+        BackHandler.addEventListener('hardwareBackPress', handleBackButton);
         AppData.current.on('stream', (peerID, username, otherStream) =>
         {
             setStreams([...streamsRef.current, {peerID, username, stream: otherStream, lives: null}]);
@@ -169,6 +181,7 @@ export default function GameRoom() {
 
         return function cleanup()
         {
+            BackHandler.removeEventListener('hardwareBackPress', handleBackButton);
             AppData.current.clearAllEventCallbacks();
         }
     }, [])
@@ -185,11 +198,11 @@ export default function GameRoom() {
     {
         if(drinkReason !== null)
         {
-            setTimeout(() => setDrinkReason(null), 3 * 1000);
-        }
-        else
-        {
-            AppData.current.notifyDates();
+            setTimeout(() => 
+            {
+                setDrinkReason(null);
+                AppData.current.notifyDates();
+            }, 3 * 1000);
         }
     }, [drinkReason])
 
