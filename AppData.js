@@ -332,6 +332,21 @@ export default class AppData
                 }
             });
 
+            this.socket.on('lowest-card', (cards, loser) =>
+            {
+                this.raise('lowest-card', cards, () =>
+                {
+                    if(loser.peerID === this.peerID)
+                    {
+                        this.raise('drink', 'You drew the lowest card!');
+                    }
+                    else
+                    {
+                        this.raise('message', loser.username + " drew the lowest card");
+                    }
+                });
+            });
+
             this.socket.on('game-paused', () =>
             {
                 this.pauseGame();
@@ -581,7 +596,11 @@ export default class AppData
                     this.raise('message', 'Rock Paper Scisors. Choose someone');
                     break;
                 case '10':
-                    this.raise('message', 'Name a category');
+                    this.raise('message', 'Lowest card drinks!');
+                    setTimeout(() => 
+                    {
+                        this.socket.emit('lowest-card');
+                    }, 3 * 1000);
                     break;
                 case 'Q':
                     this.raise('message', 'You are the Question Master');
@@ -620,7 +639,7 @@ export default class AppData
                     this.raise('message', 'Rock Paper Scisors');
                     break;
                 case '10':
-                    this.raise('message', 'Categories');
+                    this.raise('message', 'Lowest card drinks!');
                     break;
                 case 'Q':
                     this.raise('message', username + ' is the Question Master');

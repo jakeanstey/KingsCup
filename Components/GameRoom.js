@@ -58,6 +58,7 @@ export default function GameRoom() {
     const [speakerphoneSource, setSpeakerphoneSource] = useState(speakerphoneOn);
     const [videosHeight, setVideosHeight] = useState(0);
     const [playersList, setPlayersList] = useState([]);
+    const [lowestCard, setLowestCard] = useState(null);
 
     // any reference from an event must use the ref value
     const streamsRef = useRef(streams);
@@ -82,7 +83,7 @@ export default function GameRoom() {
         BackHandler.addEventListener('hardwareBackPress', handleBackButton);
         AppData.current.on('stream', (peerID, username, otherStream) =>
         {
-            setStreams([...streamsRef.current, {peerID, username, stream: otherStream, lives: null}]);
+            setStreams([...streamsRef.current, { peerID, username, stream: otherStream, lives: null, lowestCard: null }]);
         });
         AppData.current.on('player-disconnected', peerID =>
         {
@@ -179,6 +180,26 @@ export default function GameRoom() {
         {
             setEndGameVisible(true);
         });
+        AppData.current.on('lowest-card', (cards, callback) =>
+        {
+            setLowestCard(cards.find(card => card.peerID === AppData.current.peerID).card);
+            setStreams(streamsRef.current.map(stream => 
+            {
+                stream.lowestCard = cards.find(card => card.peerID === stream.peerID).card;
+                return stream;
+            }));
+
+            setTimeout(() =>
+            {
+                setLowestCard(null);
+                setStreams(streamsRef.current.map(stream =>
+                {
+                    stream.lowestCard = null;
+                    return stream;
+                }));
+                callback();
+            }, 3 * 1000);
+        });
 
         return function cleanup()
         {
@@ -236,7 +257,7 @@ export default function GameRoom() {
         Toast.showWithGravity("Copied!", Toast.SHORT, Toast.TOP);
         await Share.share({
             title: "Join King's Cup Game",
-            message: "https://www.kingssolocup.com/joinroom/" + AppData.current.roomCode
+            message: "Join my King's Cup Game: https://www.kingssolocup.com/joinroom/" + AppData.current.roomCode
         });
     }
 
@@ -368,13 +389,13 @@ export default function GameRoom() {
             <View style={{...styles.content, height: videosHeight}}>
                 { stream && 
                 <>
-                <VideoFeed style={styles.video} stream={stream} username={AppData.current.username} width={videoWidth} height={videoHeight} peerID={AppData.current.peerID} onClick={playerClicked} neverHaveIEverLives={neverHaveIEverLives} />
+                <VideoFeed style={styles.video} stream={stream} username={AppData.current.username} width={videoWidth} height={videoHeight} peerID={AppData.current.peerID} onClick={playerClicked} neverHaveIEverLives={neverHaveIEverLives} lowestCard={lowestCard} />
                 </>
                 }
                 { streams.length > 0 && 
                 streams.map(stream =>
                     {
-                        return <VideoFeed style={styles.video} stream={stream.stream} username={stream.username} width={videoWidth} height={videoHeight} key={stream.peerID} peerID={stream.peerID} onClick={playerClicked} neverHaveIEverLives={stream.lives} />
+                        return <VideoFeed style={styles.video} stream={stream.stream} username={stream.username} width={videoWidth} height={videoHeight} key={stream.peerID} peerID={stream.peerID} onClick={playerClicked} neverHaveIEverLives={stream.lives} lowestCard={stream.lowestCard} />
                     })
                 }
                 { endTurnVisible &&
