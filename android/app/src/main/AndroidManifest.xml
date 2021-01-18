@@ -29,6 +29,18 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
+      <activity android:name=".OpenFromURL"
+        android:label="@string/app_name"
+        android:launchMode="singleTask">
+        <intent-filter android:label="@string/filter_title_joinroom" android:autoVerify="true">
+          <action android:name="android.intent.action.VIEW" />
+          <category android:name="android.intent.category.DEFAULT" />
+          <category android:name="android.intent.category.BROWSABLE" />          
+          <data android:scheme="https"
+                android:host="www.kingssolocup.com"
+                android:pathPrefix="/joinroom" />
+        </intent-filter>
+      </activity>
       <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" />
     </application>
 

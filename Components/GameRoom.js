@@ -6,7 +6,8 @@ import {
     Image,
     TouchableOpacity,
     BackHandler,
-    Alert
+    Alert,
+    Share
 } from 'react-native';
 import Clipboard from '@react-native-community/clipboard';
 import OptionsMenu from 'react-native-options-menu';
@@ -229,10 +230,14 @@ export default function GameRoom() {
         }
     }
 
-    const copyRoomCode = () =>
+    const copyRoomCode = async () =>
     {
         Clipboard.setString(AppData.current.roomCode);
         Toast.showWithGravity("Copied!", Toast.SHORT, Toast.TOP);
+        await Share.share({
+            title: "Join King's Cup Game",
+            message: "https://www.kingssolocup.com/joinroom/" + AppData.current.roomCode
+        });
     }
 
     const playPause = () =>

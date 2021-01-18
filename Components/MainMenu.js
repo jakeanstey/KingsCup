@@ -13,7 +13,8 @@ import {
     Switch,
     Platform,
     ScrollView,
-    Alert
+    Alert,
+    BackHandler
 } from 'react-native';
 import Button from '../Partials/Button';
 import fanOfKings from '../Images/fan_of_kings.png';
@@ -34,6 +35,16 @@ export default function MainMenu({ startGameCallback }) {
     const [disclaimerVisible, setDisclaimerVisible] = useState(false);
 
     const bank = 'abcdefghijklmnopqrstuvwxyz1234567890';
+
+    useEffect(() =>
+    {
+        BackHandler.addEventListener('hardwareBackPress', backButtonPressed);
+        AppData.current.on('room-code-filled', roomCode =>
+        {
+            setRoomCode(roomCode);
+            setCurrentSection('joinFromLink');
+        });
+    }, []);
 
     const playGameClicked = () =>
     {
@@ -58,6 +69,7 @@ export default function MainMenu({ startGameCallback }) {
                 setCurrentSection('hostOrJoin');
                 break;
         }
+        return true;
     }
 
     const toggleGender = (gender) => 
@@ -214,6 +226,21 @@ export default function MainMenu({ startGameCallback }) {
                     </View>
                     <Button style={styles.button} text="Host" onClick={hostClicked} />
                     <Button style={styles.button} text="Join" onClick={joinClicked} />
+                </View>
+                }
+                { currentSection === 'joinFromLink' &&
+                <View style={styles.buttonWrapper}>
+                    <TextInput style={styles.usernameInput} onChangeText={text => setUsername(text)} placeholder="Username" value={username} />
+                    <View style={styles.radioGroup}>
+                        <Text style={styles.radioGroupLabel}>Female</Text>
+                        <Switch style={styles.radioGroupSwitch} onValueChange={on => toggleGender(on ? 'female' : 'male')} value={female} />
+                    </View>
+                    <View style={styles.radioGroup}>
+                        <Text style={styles.radioGroupLabel}>Male</Text>
+                        <Switch style={styles.radioGroupSwitch} onValueChange={on => toggleGender(on ? 'male' : 'female')} value={male} />
+                    </View>
+                    <TextInput style={styles.usernameInput} onChangeText={value => setRoomCode(value)} placeholder="Room Code" value={roomCode} />
+                    <Button style={styles.button} text="Join" onClick={joinRoomClicked} />
                 </View>
                 }
                 { currentSection === 'join' &&

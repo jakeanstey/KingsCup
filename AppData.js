@@ -672,4 +672,10 @@ export default class AppData
     {
         this.socket.emit('can-i-host-game', roomCode, callback);
     }
+
+    fillRoomCode(roomCode)
+    {
+        this.roomCode = roomCode;
+        this.raise('room-code-filled', roomCode);
+    }
 }

@@ -6,6 +6,8 @@ import {
   View,
   Text,
   StatusBar,
+  Linking,
+  Alert
 } from 'react-native';
 import MainMenu from './Components/MainMenu';
 import GameRoom from './Components/GameRoom';
@@ -15,6 +17,21 @@ const App = () => {
   const [currentPage, setCurrentPage] = useState('main');
   useEffect(() =>
   {
+    (async () =>
+    {
+      const url = await Linking.getInitialURL();
+      console.log(url)
+      if(url !== null)
+      {
+        // extract the code - must be 6 digits
+        const roomCode = url.split('/joinroom/')[1].split('/')[0];
+        console.log(roomCode);
+        if(roomCode.length === 6)
+        {
+          AppData.current.fillRoomCode(roomCode);
+        }
+      }
+    })()
     AppData.current.leaveGameCallback = endGame;
   }, []);
 
