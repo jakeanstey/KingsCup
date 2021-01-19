@@ -9,10 +9,12 @@ import {
 import { RTCView } from 'react-native-webrtc';
 import NeverHaveIEverLives from './NeverHaveIEverLives';
 import cards from '../Images/cards';
+import CategoriesTimer from './CategoriesTimer';
 
-export default function VideoFeed({ username, stream, onClick, style, width, height, peerID, neverHaveIEverLives, lowestCard }) {
+export default function VideoFeed({ username, stream, onClick, style, width, height, peerID, neverHaveIEverLives, lowestCard, categoriesTurn }) {
 
     const [cardSource, setCardSource] = useState(null);
+    const [categoriesTimer, setCategoriesTimer] = useState(null);
 
     useEffect(() =>
     {
@@ -55,6 +57,9 @@ export default function VideoFeed({ username, stream, onClick, style, width, hei
                 <View style={styles.cardWrapper}>
                     <Image source={cardSource} style={styles.card} />
                 </View>
+                }
+                { categoriesTurn === true &&
+                <CategoriesTimer />
                 }
             </View>
         </TouchableOpacity>

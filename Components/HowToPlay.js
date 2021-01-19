@@ -31,9 +31,9 @@ export default function HowToPlay() {
                     <CardDetails card="7H" name="Seven" details="Last person to tap the screen drinks." />
                     <CardDetails card="8H" name="Eight" details="Date. Choose another player to drink when you have to drink (tap on their video)." />
                     <CardDetails card="9H" name="Nine" details="Rock.Paper.Scissors. Choose someone to fight against. Loser drinks, obviously." />
-                    <CardDetails card="10H" name="Ten" details="Lowest card drinks! Each player gets a random card from a fresh deck. The player who is dealt the lowest face valued card drinks." />
+                    <CardDetails card="10H" name="Ten" details="Categories. Name a category. Taking turns, each player names items that belong in said category. If you cant name an item or get or name an item that doesn't belong, drink. Court of public opinion." />
                     <CardDetails card="JH" name="Jack" details="Never have I ever.. Starts a minigame where each player has three lives. Each turn, the player whose turn it is must truthfully state something they have never done. If any of the other players have done this thing, they must select that they have. First one to 0 lives drinks." />
-                    <CardDetails card="QH" name="Queen" details="Question Master. Name speaks for itself. If another player answers one of your questions, they drink." />
+                    <CardDetails card="QH" name="Queen" details="Lowest card drinks! Each player gets a random card from a fresh deck. The player who is dealt the lowest face valued card drinks." />
                     <CardDetails card="KH" name="King" details="Drink. And if this was the last king in the deck, finish it all." />
                 </View>
             </View>

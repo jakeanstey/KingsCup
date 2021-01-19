@@ -36,6 +36,7 @@ import RockPaperScissors from '../Partials/RockPaperScissors';
 import GameOverButton from '../Partials/GameOverButton';
 import HowToPlay from './HowToPlay';
 import PlayersList from '../Partials/PlayersList';
+import CategoriesTimerWithButton from '../Partials/CategoriesTimerWithButton';
 
 export default function GameRoom() {
     const [stream, setStream] = useState();
@@ -59,6 +60,8 @@ export default function GameRoom() {
     const [videosHeight, setVideosHeight] = useState(0);
     const [playersList, setPlayersList] = useState([]);
     const [lowestCard, setLowestCard] = useState(null);
+    const [categoriesStartButtonVisible, setCategoriesStartButtonVisible] = useState(false);
+    const [categoryTurn, setCategoriesTurn] = useState(false);
 
     // any reference from an event must use the ref value
     const streamsRef = useRef(streams);
@@ -83,7 +86,7 @@ export default function GameRoom() {
         BackHandler.addEventListener('hardwareBackPress', handleBackButton);
         AppData.current.on('stream', (peerID, username, otherStream) =>
         {
-            setStreams([...streamsRef.current, { peerID, username, stream: otherStream, lives: null, lowestCard: null }]);
+            setStreams([...streamsRef.current, { peerID, username, stream: otherStream, lives: null, lowestCard: null, categoriesTurn: false }]);
         });
         AppData.current.on('player-disconnected', peerID =>
         {
@@ -199,6 +202,33 @@ export default function GameRoom() {
                 }));
                 callback();
             }, 3 * 1000);
+        });
+        AppData.current.on('start-categories', () =>
+        {
+            // set the start button to visible
+            setCategoriesStartButtonVisible(true);
+        });
+        AppData.current.on('categories-my-turn', () =>
+        {
+            setStreams(streamsRef.current.map(stream =>
+            {
+                stream.categoriesTurn = false;
+                return stream;
+            }));
+            setCategoriesTurn(true);
+        });
+        AppData.current.on('categories-turn', peerID =>
+        {
+            if(peerID !== null)
+            {
+                setMessage(null);
+            }
+            setCategoriesTurn(false);
+            setStreams(streamsRef.current.map(stream =>
+            {
+                stream.categoriesTurn = peerID === stream.peerID;
+                return stream;
+            }));
         });
 
         return function cleanup()
@@ -355,6 +385,25 @@ export default function GameRoom() {
         setPlayersList([]);
     }
 
+    const categoriesNext = () =>
+    {
+        AppData.current.socket.emit('categories-next');
+        setCategoriesTurn(false);
+    }
+
+    const categoriesLost = () =>
+    {
+        AppData.current.socket.emit('categories-lost', AppData.current.peerID, AppData.current.username);
+        setCategoriesTurn(false);
+    }
+
+    const startCategories = () =>
+    {
+        setMessage(null);
+        setCategoriesStartButtonVisible(false);
+        AppData.current.socket.emit('start-categories');
+    }
+
     return (
         <View style={styles.wrapper} onLayout={gotDimensions}>
             <View style={styles.statusBar}>
@@ -389,13 +438,13 @@ export default function GameRoom() {
             <View style={{...styles.content, height: videosHeight}}>
                 { stream && 
                 <>
-                <VideoFeed style={styles.video} stream={stream} username={AppData.current.username} width={videoWidth} height={videoHeight} peerID={AppData.current.peerID} onClick={playerClicked} neverHaveIEverLives={neverHaveIEverLives} lowestCard={lowestCard} />
+                <VideoFeed style={styles.video} stream={stream} username={AppData.current.username} width={videoWidth} height={videoHeight} peerID={AppData.current.peerID} onClick={playerClicked} neverHaveIEverLives={neverHaveIEverLives} lowestCard={lowestCard} categoriesTurn={false} />
                 </>
                 }
                 { streams.length > 0 && 
                 streams.map(stream =>
                     {
-                        return <VideoFeed style={styles.video} stream={stream.stream} username={stream.username} width={videoWidth} height={videoHeight} key={stream.peerID} peerID={stream.peerID} onClick={playerClicked} neverHaveIEverLives={stream.lives} lowestCard={stream.lowestCard} />
+                        return <VideoFeed style={styles.video} stream={stream.stream} username={stream.username} width={videoWidth} height={videoHeight} key={stream.peerID} peerID={stream.peerID} onClick={playerClicked} neverHaveIEverLives={stream.lives} lowestCard={stream.lowestCard} categoriesTurn={stream.categoriesTurn} />
                     })
                 }
                 { endTurnVisible &&
@@ -421,6 +470,16 @@ export default function GameRoom() {
                 }
                 { card !== null &&
                 <CardView card={card} />
+                }
+                { categoryTurn === true &&
+                <CategoriesTimerWithButton next={categoriesNext} lost={categoriesLost} />
+                }
+                { categoriesStartButtonVisible &&
+                <View style={styles.categoriesStartButtonWrapper}>
+                    <TouchableOpacity style={styles.categoriesStartButton} onPress={startCategories}>
+                        <Text style={styles.categoriesStartButtonText}>START CATEGORIES</Text>
+                    </TouchableOpacity>
+                </View>
                 }
                 { playersList.length > 0 &&
                 <PlayersList players={playersList} playerClicked={playerListItemClicked} cancel={cancelPlayerSelection} />
@@ -526,5 +585,26 @@ const styles = StyleSheet.create({
         width: undefined,
         aspectRatio: 470 / 380,
         marginRight: 10
+    },
+    categoriesStartButtonWrapper: {
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#ffffff55'
+    },
+    categoriesStartButton: {
+        width: '80%',
+        backgroundColor: 'blue',
+        padding: 10
+    },
+    categoriesStartButtonText: {
+        fontSize: 22,
+        color: 'white',
+        textAlign: 'center'
     }
 })

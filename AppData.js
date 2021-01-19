@@ -347,6 +347,31 @@ export default class AppData
                 });
             });
 
+            this.socket.on('categories-turn', (peerID, username) =>
+            {
+                if(peerID === this.peerID)
+                {
+                    this.raise('categories-my-turn')
+                }
+                else
+                {
+                    this.raise('categories-turn', peerID);
+                }
+            });
+
+            this.socket.on('categories-lost', (peerID, username) =>
+            {
+                if(peerID === this.peerID)
+                {
+                    this.raise('drink', 'You lost. Drink!');
+                }
+                else
+                {
+                    this.raise('message', username + ' was too slow');
+                }
+                this.raise('categories-turn', null);
+            });
+
             this.socket.on('game-paused', () =>
             {
                 this.pauseGame();
@@ -596,14 +621,15 @@ export default class AppData
                     this.raise('message', 'Rock Paper Scisors. Choose someone');
                     break;
                 case '10':
+                    this.raise('message', 'Categories');
+                    this.raise('start-categories');
+                    break;
+                case 'Q':
                     this.raise('message', 'Lowest card drinks!');
                     setTimeout(() => 
                     {
                         this.socket.emit('lowest-card');
                     }, 3 * 1000);
-                    break;
-                case 'Q':
-                    this.raise('message', 'You are the Question Master');
                     break
                 case 'K':
                     this.raise('drink', 'King pulled, drink');
@@ -639,10 +665,10 @@ export default class AppData
                     this.raise('message', 'Rock Paper Scisors');
                     break;
                 case '10':
-                    this.raise('message', 'Lowest card drinks!');
+                    this.raise('message', 'Categories');
                     break;
                 case 'Q':
-                    this.raise('message', username + ' is the Question Master');
+                    this.raise('message', 'Lowest card drinks!');
                     break;
                 case 'K':
                     this.raise('message', 'King pulled');
